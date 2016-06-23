@@ -108,7 +108,7 @@ function calculate_groups_and_chats() {
 
 // Group
 var users = [], msg_in = [], msg_out = [];
-var timeline_values = new Array(24).fill(0); 
+var timeline_values = []; 
 function update_user(user_passed) {
   var user = user_passed.toString();
   // check if it exists 
@@ -145,7 +145,6 @@ function extract_hour(time_passed) {
   for (var i=0; i<hour_extraction; i++){
     hour_string = hour_string + time[i];
   } 
-  console.log("Hour String = " + hour_extraction + " hour string = " + hour_string);
   return parseInt(hour_string) + offset; 
 }
 
@@ -177,6 +176,7 @@ function print_list() {
  */
 function compute_activity() {
   users = [];
+  timeline_values = new Array(24).fill(0);
   msg_in = document.getElementsByClassName('message-in');
   msg_out = document.getElementsByClassName('message-out');
   
@@ -195,9 +195,14 @@ function compute_activity() {
 
       // Extract hours 
       var time = msg_in[i].getElementsByClassName('message-datetime')[0].innerText;
-      console.log("Time = " + time + "Time extracted = " + extract_hour(time));
       timeline_values[extract_hour(time)-1] += 1; 
     }
+    // Hour extraction for msg_out 
+    for (var i=0; i<msg_out.length; i++) {
+      var time = msg_out[i].getElementsByClassName('message-datetime')[0].innerText;
+      timeline_values[extract_hour(time)-1] += 1;  
+    }
+
   update_messages_by_you();
-  
+  print_list();  
 }
