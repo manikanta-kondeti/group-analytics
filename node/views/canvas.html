@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/data.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+<div style="text-align: center">
+    <p> Average conversations per week : <%= conversations_per_week %> </p>
+    <p> Average conversations per month : <%= conversations_per_month %> </p>
+
+</div>
+
+<script>
+    console.log("Conversations = " + <%= conversations %>);
+    var conversations = <%= JSON.stringify(conversations) %>;
+    var active_members = <%= JSON.stringify(active_members) %>;
+    var total_members = <%= JSON.stringify(total_members) %>;
+    var first_user_messages = <%= JSON.stringify(first_user_messages) %>;
+    var second_user_messages = <%= JSON.stringify(second_user_messages) %>;
+    var third_user_messages = <%= JSON.stringify(third_user_messages) %>;
+    var first_user_names = <%- JSON.stringify(first_user_names) %>;
+    var second_user_names = <%- JSON.stringify(second_user_names) %>;
+    var username = <%- JSON.stringify(username) %>;
+    var groupname = <%- JSON.stringify(groupname) %>;
+
+
+    var xaxis_names = [];
+    for (var i=0; i<first_user_names.length; i++) {
+        xaxis_names.push(first_user_names[i] + ", " + second_user_names[i]);
+    }   
+    $(function () {
+        $('#container').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Messages per conversation/Active Members'
+            },
+            subtitle: {
+                text: 'Whatsapp Groupname:'+ groupname.toUpperCase() +' , UserName: ' + username.toUpperCase()
+            },
+            xAxis: {
+                categories: xaxis_names,
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Count'
+                },
+                tickInterval: 2,
+
+                lineWidth: 1
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                        '<td style="padding:0"><b>{point.y:.1f} messages</b></td></tr>',
+                    footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                
+                column: {
+                     dataLabels: { 
+                        enabled: true 
+                    },
+                    pointPadding: 0.2,
+                    borderWidth: 0
+                }
+            },
+
+            series: [{
+                name: 'Messages',
+                data: conversations,
+
+                }, {
+                name: 'Active Members',
+                data: active_members
+
+            },
+            {
+                name: 'Total Members',
+                data: total_members
+
+            },
+            {
+                name: 'First User Contribution',
+                data: first_user_messages
+
+            },
+            {
+                name: 'Second User Contribution',
+                data: second_user_messages
+
+            },
+            {
+                name: 'Third user Contribution',
+                data: third_user_messages
+
+            }
+            ]
+        });
+    });
+</script>
+
+</html>

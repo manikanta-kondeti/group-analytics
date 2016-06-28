@@ -1,448 +1,400 @@
-/*
 
-TODO:
- Get each chat clicked and retrieve numbers(no: of messages total, and from you) 
+  // Groups intended  : Dont touch or change or update 
+  var conversations = [];
+  var active_members =[];
+  var users = [];
+  var hbd_conversations = [];
+  var first_user_contribution = [];
+  var second_user_contribution = [];
+  var third_user_contribution = [];
+  var fourth_user_contribution = [];
+  var first_user_names = [];
+  var second_user_names = [];
 
-Adding jQuery to console:
-  var jq = document.createElement('script');
-  jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
-  document.getElementsByTagName('head')[0].appendChild(jq);
-  //by image : .getElementsByClassName('chat-avatar')[0].getElementsByTagName('img')[0].src
+  var name = "";
+  var WEEKS = 0;
+  var MONTHS = 0;
+  var group_length;
 
+  // More concrete metrics : ( class: message-system)
+  function main(NAME, TOTAL_LENGTH, MONTHS_PASSED) {
+    name = NAME;
+    group_length = TOTAL_LENGTH;
+    MONTHS = MONTHS_PASSED;
+    WEEKS = MONTHS * 4;
 
-  // Date: 
-  message_system = document.getElementsByClassName('message-system');
-  for(var i=0;i<message_system.length;i++) { var msg = message_system[i].getElementsByClassName('emojitext')[0]; console.log(msg.innerText); };
+    // re-initialize  
+    hbd_conversations = [];
+    active_members = [];
+    conversations = [];
+    users = [];
+    first_user_contribution = [];
+    second_user_contribution = [];
+    third_user_contribution = [];
+    fourth_user_contribution = [];
+    first_user_names = [];
+    second_user_names = [];
 
-*/
-
-var chats = [], chats_array = [], full_chats = [], chat_divs = [], count = 0;;
-var chats = 0, groups = 0, single_chats_array = [], groups_array = [], muted_groups = 0;
-var body = document.getElementsByClassName('pane-body pane-list-body')[0];
-
-
-/*
- * This method constructs a key and used it for identifying the object 
-*/
-function get_key(Object) {
-  var key = "";
-  //retrieve image source 
-  var img = Object.getElementsByClassName('chat-avatar')[0].getElementsByTagName('img');
-  if (img.length == 1) {
-    key = key + img[0].src;
-  }
-  //retrieve title 
-  var span = Object.getElementsByClassName('chat-title')[0].getElementsByTagName('span');
-  if (span.length == 1) {
-    key = key + span[0].title;
-  }
-  return key;
-}
+    var output_json_object = {};
 
 
-function check_duplicates(Object){
-  for (var j=0; j<chats_array.length; j++) { 
-    var key = get_key(Object);
-    if (chats_array[j].key == key) {
-      return "true";
-    } 
-  }
-  return "false";
-}
+    var messages = document.getElementsByClassName('msg');
+    var count = 0;
+    var conv = [];
+   
+    while(count < messages.length-1) {
+      var type_of_msg1 = get_type_of_msg_div(messages[count]);
+      var type_of_msg2 = get_type_of_msg_div(messages[count+1]);
+      
+      if (type_of_msg1 == 'message' && type_of_msg2 == 'message'){
 
-
-setInterval(function() { 
-  if ((body.scrollTop + body.clientHeight != body.scrollHeight) && (groups == 0 && chats == 0)){
-      scroll_content();
-  }  else if( (body.scrollTop + body.clientHeight == body.scrollHeight) && count == 0) { 
-      scroll_content(); 
-      count = 1; 
-      calculate_groups_and_chats();
-  }
-}, 3000);
-
-
-function scroll_content() {
-  console.log("Calculating... Please don't touch/scroll/click");
-  chat_divs = document.getElementsByClassName('chat');
-  for(var i=0; i<chat_divs.length; i++){
-    // check if exists
-    var status = check_duplicates(chat_divs[i]);
-    if (status === "false") {
-      var node = chat_divs[i];
-      var muted = node.getElementsByClassName('icon icon-meta icon-muted');
-      mute_status = false;
-      if (muted.length != 0) {
-        mute_status = true;
-      }
-      var object = {
-        key : get_key(node),
-        object : node,
-        mute_status : mute_status
-      }
-      chats_array.push(object);
-    }
-  }
-  body.scrollTop = body.scrollTop + 400;
-}
-
-
-function calculate_groups_and_chats() {
-  for( i=0;i<chats_array.length; i++) {
-    var obj = chats_array[i].object;
-    // Check if it is a group or a chat 
-    var id = obj.getAttribute('data-reactid');
-    var type = id.search("g");
-
-    if (type == -1) {
-      chats = chats + 1;
-      single_chats_array.push(chats_array[i]);
-    }
-    else {
-      // Check for muted groups
-      var muted = obj.getElementsByClassName('icon icon-meta icon-muted');
-      if (muted.length != 0) {
-        muted_groups = muted_groups + 1;
-      }
-      groups = groups + 1;
-      groups_array.push(chats_array[i]);
-    }
-  }
-  console.log("Number of groups = " + groups + " and number of chats = " + chats + " and number of muted groups = " + muted_groups);
-}
-
-
-// Group
-var users = [], msg_in = [], msg_out = [];
-var timeline_values = []; 
-
-function update_user(user_passed) {
-  var user = user_passed.toString();
-  // check if it exists 
-  var user_index = -1;
-  for (var i=0; i<users.length; i++) {
-    if (users[i].name == user) {
-      user_index = i;
-      break;
-    }
-  }
-  if (user_index == -1) {
-    var object = {};
-    object['name'] = user;
-    object['messages'] = 1;
-    users.push(object);
-  } else {
-    users[user_index]['messages'] += 1;
-  }
-}
-
-/**
- * @param : text of time. 
- *   return : hour (integer)
- */
-function extract_hour(time_passed) {
-  var time = time_passed.toString();
-  var hour_extraction = time.search(":");
-  var hour_string = "";
-  var offset = 0;
-  var meridem = time.search("PM");
-  if (meridem != -1) {
-    offset = 12;
-  } 
-  for (var i=0; i<hour_extraction; i++){
-    hour_string = hour_string + time[i];
-  } 
-  return parseInt(hour_string) + offset; 
-}
-
-function update_messages_by_you() {
-  var object = {};
-  object["name"] = "You";
-  object['messages'] = msg_out.length;
-  users.push(object);
-}
-
-
-function print_list() {
-  users.sort(function(b, a){
-      return a.messages-b.messages;
-  })
-  for (var i=0; i<users.length; i++) {
-    console.log(users[i].name + " : " + users[i].messages);
-  }
-
-  console.log("Total messages : " + msg_in.length);
-  console.log("Total timeline values : " + timeline_values);
-}
-
-
-
-/* TODO: Messages count:-  Total groups and activity in that groups (class: message_in,  message_out)
- *  @param: null
- *  return : object{messages_out : <int>, messages_out : <int>, muted_status : <boolean>} 
- */
-function compute_activity() {
-  users = [];
-  timeline_values = new Array(24).fill(0);
-  msg_in = document.getElementsByClassName('message-in');
-  msg_out = document.getElementsByClassName('message-out');
-  
-
-  for (var i=0; i<msg_in.length; i++) { 
-    var x = msg_in[i].getElementsByClassName('number text-clickable');  
-    if (x.length == 0) {
-      var y = msg_in[i].getElementsByClassName('text-clickable');  
-      if (y.length != 0){
-          // Actor update 
-          update_user(y[0].innerText);
+        var t1 = messages[count].getElementsByClassName('message-datetime')[0].innerText;
+        var datetime2 = messages[count+1].getElementsByClassName('message-datetime');
+        if (datetime2.length != 0) {
+          var t2 = messages[count+1].getElementsByClassName('message-datetime')[0].innerText;
+          conv_flag = get_time_diff(t1, t2, false);
         }
-      } else {
-        update_user(x[0].innerText);
-      } 
-
-      // Extract hours 
-      var time = msg_in[i].getElementsByClassName('message-datetime')[0].innerText;
-      timeline_values[extract_hour(time)-1] += 1; 
-    }
-    // Hour extraction for msg_out 
-    for (var i=0; i<msg_out.length; i++) {
-      var time = msg_out[i].getElementsByClassName('message-datetime')[0].innerText;
-      timeline_values[extract_hour(time)-1] += 1;  
-    }
-
-  update_messages_by_you();
-  print_list();  
-}
-
-
-var conversations = [];
-var active_members =[];
-var users = [];
-// More concrete metrics : ( class: message-system)
-function main() {
-  var messages = document.getElementsByClassName('msg');
-  var count = 0;
-  var conv = [];
-  active_members = [];
-  conversations = [];
-  while(count < messages.length-1) {
-    var type_of_msg1 = get_type_of_msg_div(messages[count]);
-    var type_of_msg2 = get_type_of_msg_div(messages[count+1]);
-    
-    if (type_of_msg1 == 'message' && type_of_msg2 == 'message'){
-
-      var t1 = messages[count].getElementsByClassName('message-datetime')[0].innerText;
-      var datetime2 = messages[count+1].getElementsByClassName('message-datetime');
-      if (datetime2.length != 0) {
-        var t2 = messages[count+1].getElementsByClassName('message-datetime')[0].innerText;
-        conv_flag = get_time_diff(t1, t2, false);
+        else {
+          conv_flag = false;
+        }
+        
+        if (conv_flag == true) {
+          // console.log("Added messages");
+          conv.push(messages[count]);
+        }
+        else if (conv_flag == false && conv.length >= 10){
+          // console.log("conversation ended ");
+          add_conversation(conv)
+          conv = [];
+        }
+        else if (conv_flag == false && conv.length < 10){
+          // console.log("conversation ended with not adding messages");
+          conv = [];
+        }
+        count += 1;
       }
-      else {
-        conv_flag = false;
+      else if(type_of_msg1 == 'ignore' || type_of_msg1 == 'date') {
+        count += 1;
       }
       
-      console.log("conv_flag = " + conv_flag + "  t1 = " + t1 + " t2 = " + t2);
-      if (conv_flag == true) {
-        console.log("Added messages");
-        conv.push(messages[count]);
+      else if (type_of_msg1 == 'message' && type_of_msg2 == 'date') {
+        var t1 = messages[count].getElementsByClassName('message-datetime')[0].innerText;
+        var datetime2 = messages[count+1].getElementsByClassName('message-datetime');
+        if (datetime2.length != 0) {
+          var t2 = messages[count+1].getElementsByClassName('message-datetime')[0].innerText;
+          conv_flag = get_time_diff(t1, t2, false);
+        }
+        else {
+          conv_flag = false;
+        }
+
+        if (conv_flag == true) {
+          //console.log("Added messages");
+          conv.push(messages[count]);
+        }
+        else if (conv_flag == false && conv.length >= 10){
+          // console.log("conversation ended ");
+          add_conversation(conv);
+        }
+        else if (conv_flag == false && conv.length < 10){
+          // console.log("conversation ended without adding messages");
+          conv = [];
+        }
+        count += 2;
       }
-      else if (conv_flag == false && conv.length > 10){
-        console.log("conversation ended ");
+
+      else {
+        count +=1;
+      }
+      
+      // Last element iteration
+      if (count == messages.length-2 && conv.length >= 10){
         conversations.push(conv);
         conv = [];
       }
-      else if (conv_flag == false && conv.length <= 10){
-        console.log("conversation ended with not adding messages");
-        conv = [];
+    }
+    // Compute Active Members
+    get_active_members();
+
+    // Compute Greeting conversations 
+    get_happy_birthday_conversations();
+
+    // Compute User Contributions 
+    get_users_contributions();
+
+    // Final call
+    print_metrics();
+   
+  }
+
+
+  /**
+   * @param : takes a single array of divs corresponsing to a conversation
+   *    return : list of conversations
+   */
+  function add_conversation(single_conversation) {
+    var length = conversations.length;
+    if (length == 0) {
+      conversations.push(single_conversation);
+      return;
+    }
+    if (conversations[length-1].length != single_conversation.length) {
+      conversations.push(single_conversation);
+    }
+  }
+
+  function update_user(user_passed) {
+    var user = user_passed.toString();
+    // check if it exists 
+    var user_index = -1;
+    for (var i=0; i<users.length; i++) {
+      if (users[i].name == user) {
+        user_index = i;
+        break;
       }
-      count += 1;
     }
-    else if(type_of_msg1 == 'ignore' || type_of_msg1 == 'date') {
-      count += 1;
+    if (user_index == -1) {
+      var object = {};
+      object['name'] = user;
+      object['messages'] = 1;
+      users.push(object);
+    } else {
+      users[user_index]['messages'] += 1;
     }
+  }
+
+  function get_users_contributions() {
+    var users_before_sort = active_members;
+    active_members = [];
+    for (var i=0; i<users_before_sort.length; i++) {
+        active_members.push(users_before_sort[i].sort(function(b, a){
+           return a.messages-b.messages;
+       })  
+     );
+       // console.log(active_members);
+    }
+
+    var total_messages = 0;
+    // First user contribution 
+    for (var i=0; i<active_members.length;i++) {
+      total_messages = 0;
+      for(var j=0; j<active_members[i].length; j++) {
+          total_messages += active_members[i][j].messages;
+      }
+      if (active_members[i].length >= 4) {
+        first_user_contribution.push(Math.round((active_members[i][0].messages*100)/total_messages));
+        first_user_names.push(active_members[i][0].name);
+        second_user_contribution.push(Math.round((active_members[i][1].messages*100)/total_messages));
+        second_user_names.push(active_members[i][1].name);
+        third_user_contribution.push(Math.round((active_members[i][2].messages*100)/total_messages));
+        fourth_user_contribution.push(Math.round((active_members[i][3].messages*100)/total_messages));
+      }
+      else if (active_members[i].length == 3) {
+        first_user_contribution.push(Math.round((active_members[i][0].messages*100)/total_messages));
+        first_user_names.push(active_members[i][0].name);
+        second_user_contribution.push(Math.round((active_members[i][1].messages*100)/total_messages));
+        second_user_names.push(active_members[i][1].name);
+        third_user_contribution.push(Math.round((active_members[i][2].messages*100)/total_messages));
+        fourth_user_contribution.push(0);
+      }
+      else if (active_members[i].length == 2) {
+        first_user_contribution.push(Math.round((active_members[i][0].messages*100)/total_messages));
+        second_user_contribution.push(Math.round((active_members[i][1].messages*100)/total_messages));
+        third_user_contribution.push(0);
+        fourth_user_contribution.push(0);
+
+        first_user_names.push(active_members[i][0].name);
+        second_user_names.push(active_members[i][1].name);
+      }
+      else if (active_members[i].length == 1) {
+        first_user_contribution.push(Math.round((active_members[i][0].messages*100)/total_messages));
+        second_user_contribution.push(0);
+        third_user_contribution.push(0);
+        fourth_user_contribution.push(0);
+
+        first_user_names.push(active_members[i][0].name);
+        second_user_names.push("--no one--");
+      }
+    }
+  }
+
+  /** 
+   * @param : null (input global conversations array)
+   *    return :  list of active members in each conversation.
+  **/
+  function get_active_members() {
+    for (var c=0; c<conversations.length; c++) {
+      users = [];
+      for (var i=0;i<conversations[c].length; i++) {
+          var x = conversations[c][i].getElementsByClassName('number text-clickable');  
+          if (x.length == 0) {
+            var y = conversations[c][i].getElementsByClassName('text-clickable');  
+            if (y.length != 0){
+                // Actor update
+                var you = conversations[c][i].getElementsByClassName('message-out');
+                if ((y[0].innerText.search("AM") != -1  || y[0].innerText.search("PM") != 1 ) && you.length != 0)  {
+                  update_user("You");
+                } 
+                else {
+                  update_user(y[0].innerText);
+                }
+              }
+            } 
+          else {
+              update_user(x[0].innerText);
+            } 
+        }
+        // Add users to active memebrs list
+        active_members.push(users);
+    }
+  }
+
+
+  /**
+   * @param : msg_div
+   *    return : 'message' || 'datetime' || 'ignore'
+  **/
+  function get_type_of_msg_div(msg_div) {
+    // check if its a date
+    var children = msg_div.children;
     
-    else if (type_of_msg1 == 'message' && type_of_msg2 == 'date') {
-      var t1 = messages[count].getElementsByClassName('message-datetime')[0].innerText;
-      var datetime2 = messages[count+1].getElementsByClassName('message-datetime');
-      if (datetime2.length != 0) {
-        var t2 = messages[count+1].getElementsByClassName('message-datetime')[0].innerText;
-        conv_flag = get_time_diff(t1, t2, false);
+    if (children.length == 1) {
+      return 'date';
+    }
+    // Check if its a msg 
+    else if (children.length == 2) {
+      var temp = children[1];
+      if (temp == undefined) {
+        return 'ignore'
       }
       else {
-        conv_flag = false;
+        if (children[1].classList.contains('message-in') == true ||  children[1].classList.contains('message-out') == true) {
+          return 'message'
+        }
       }
-
-    
-      console.log("conv_flag = " + conv_flag + "  t1 = " + t1 + " t2 = " + t2);
-      if (conv_flag == true) {
-        console.log("Added messages");
-        conv.push(messages[count]);
-      }
-      else if (conv_flag == false && conv.length > 10){
-        console.log("conversation ended ");
-        conversations.push(conv);
-      }
-      else if (conv_flag == false && conv.length <= 10){
-        console.log("conversation ended without adding messages");
-        conv = [];
-      }
-      count += 2;
     }
-
-    else {
-      count +=1;
-    }
-    
-    // Last element iteration
-    if (count == messages.length-2 && conv.length > 10){
-      conversations.push(conv);
-      conv = [];
-    }
+    return 'ignore';
   }
-  // Conversations separated 
 
-  get_active_members();
-  var conversations_count = [];
-  var active_members_count = [];
-  for (var i=0;i<conversations.length; i++){
-    conversations_count.push(conversations[i].length);
-  }
-  for (var i=0;i<active_members.length; i++){
-    active_members_count.push(active_members[i].length);
-  }
-  console.log(conversations_count);
-  console.log(active_members_count);
-
-  //End of method 
-}
-
-
-function update_user(user_passed) {
-  var user = user_passed.toString();
-  // check if it exists 
-  var user_index = -1;
-  for (var i=0; i<users.length; i++) {
-    if (users[i].name == user) {
-      user_index = i;
-      break;
-    }
-  }
-  if (user_index == -1) {
-    var object = {};
-    object['name'] = user;
-    object['messages'] = 1;
-    users.push(object);
-  } else {
-    users[user_index]['messages'] += 1;
-  }
-}
-
-
-
-/** 
- * @param : null (input global conversations array)
- *    return :  list of active members in each conversation.
-**/
-function get_active_members() {
-  for (var c=0; c<conversations.length; c++) {
-    users = [];
-    for (var i=0;i<conversations[c].length; i++) {
-        var x = conversations[c][i].getElementsByClassName('number text-clickable');  
-        if (x.length == 0) {
-          var y = conversations[c][i].getElementsByClassName('text-clickable');  
-          if (y.length != 0){
-              // Actor update
-              var you = conversations[c][i].getElementsByClassName('message-out');
-              if ((y[0].innerText.search("AM") != -1  || y[0].innerText.search("PM") != 1 ) && you.length != 0)  {
-                update_user("You");
-              } 
-              else {
-                update_user(y[0].innerText);
-              }
+  /**
+   *  get happy birthday conversations 
+   *  @param : null (global conversations array)
+   *     return : [list of messages in each conversations with birthday tag]
+  **/
+  function get_happy_birthday_conversations() {
+      hbd_conversations = [];
+      var single_conversation = [];
+      for (var i=0;i<conversations.length;i++) { 
+        single_conversation = [];
+        for(var j=0;j<conversations[i].length;j++) { 
+          var c = conversations[i][j]; 
+          if (c.getElementsByClassName('emojitext selectable-text').length == 1) {
+            var message_text = c.getElementsByClassName('emojitext selectable-text')[0].innerText.toUpperCase();
+      
+            if (message_text.search('BIRTHDAY') != -1 || message_text.search('HAPPY RETURNS') != -1 || message_text.search('MANY MANY') != -1 || message_text.search('CONGRATS') != -1 || message_text.search('CONGRATULATIONS') != -1 || message_text.search('ANNIVERSARY') != -1 || message_text.search('WEDDING') != -1) {
+              single_conversation.push(conversations[i][j]);
             }
           } 
+        }
+        if (single_conversation.length == 0) {
+          hbd_conversations.push(0);
+        }
         else {
-            update_user(x[0].innerText);
-          } 
+          hbd_conversations.push(single_conversation.length);
+        }
       }
-      // Add users to active memebrs list
-      active_members.push(users);
+    return hbd_conversations;
   }
-}
 
 
-/**
- * @param : msg_div
- *    return : 'message' || 'datetime' || 'ignore'
-**/
-function get_type_of_msg_div(msg_div) {
-  // check if its a date
-  var children = msg_div.children;
-  
-  if (children.length == 1) {
-    return 'date';
-  }
-  // Check if its a msg 
-  else if (children.length == 2) {
-    var temp = children[1];
-    if (temp == undefined) {
-      return 'ignore'
+  /** 
+   * Get concrete metrics 
+  **/
+  function print_metrics() {
+    var conversations_count = [];
+    var active_members_count = [];
+
+    // Get concrete metrics 
+    for (var i=0;i<conversations.length; i++){
+      conversations_count.push(conversations[i].length);
     }
-    else {
-      if (children[1].classList.contains('message-in') == true ||  children[1].classList.contains('message-out') == true) {
-        return 'message'
-      }
+    for (var i=0;i<active_members.length; i++){
+      active_members_count.push(active_members[i].length);
     }
-  }
-  return 'ignore';
-}
 
-/**
- *  @param :  timestamp1,2 as a input params 
- *     return : true ( if it is less than 1 hr), false(more than 1 hr)
-**/
-function get_time_diff(timestamp1, timestamp2, day_change) {
-  var time1 = timestamp1.toString();
-  var time2 = timestamp2.toString();
-  // Split into hours and minutes 
-  var hour1 = parseInt(time1.split(':')[0]);
-  var temp1 = time1.split(':')[1];
-  var minutes1 = parseInt(temp1.split(' ')[0]);  
-  var M1 = temp1.split(' ')[1];
-  var hour2 = parseInt(time2.split(':')[0]);
-  var temp2 = time2.split(':')[1];
-  var minutes2 = parseInt(temp2.split(' ')[0]);  
-  var M2 = temp2.split(' ')[1];
+    output_json_object = {};
+    output_json_object['name'] = name;
+    output_json_object['total_members'] = new Array(conversations.length).fill(group_length);
+    output_json_object['total_conversations'] = conversations.length;
+    output_json_object['conversations'] = conversations_count;
+    output_json_object['active_members'] = active_members_count;
+    output_json_object['greeting_conversations'] = hbd_conversations;
+    output_json_object['avg_conversations_per_week'] = Math.round(conversations.length/WEEKS);
+    output_json_object['avg_conversations_per_month'] = Math.round(conversations.length/MONTHS);
+    output_json_object['first_user_contribution'] = first_user_contribution;
+    output_json_object['second_user_contribution'] = second_user_contribution;
+    output_json_object['third_user_contribution'] = third_user_contribution;
+    output_json_object['fourth_user_contribution'] = fourth_user_contribution;
+    output_json_object['first_user_names'] = first_user_names;
+    output_json_object['second_user_names'] = second_user_names; 
 
-  // Day Change and Validation
-  if (day_change == true && ((M1 == "AM" && M2 == "AM") || (M1 == "PM" && M2 == "PM") || (M1 == "AM" && M2 == "PM"))) {
-    return false;
-  }
-  if ((M2 == "AM" && M1 == "PM") || (M1 == "AM" && M2 == "PM")) {
-    hour2 += 12;
-    (hour2 >= 24) ? hour2 -= 12 : hour2;
-    if (hour1 == 12) {
+ /*   console.log("total_conversations = " + conversations.length + "\n" +
+      "conversations = [" + conversations_count + "]" + "\n" +
+      "active_members = [" + active_members_count + "]" + "\n" +
+      "greeting_conversations = [" + hbd_conversations + "]" + "\n" +
+      "avg_conversations_per_week = " + conversations.length/WEEKS + "\n" +
+      "avg_conversations_per_month = " + conversations.length/MONTHS + "\n" +
+      "first_user_contribution = [" + first_user_contribution + "]" + "\n" +
+      "second_user_contribution = [" + second_user_contribution + "]" + "\n" +
+      "third_user_contribution = [" + third_user_contribution + "]" + "\n" +
+      "fourth_user_contribution = [" + fourth_user_contribution + "]");
+*/
+    console.log(JSON.stringify(output_json_object));
+  } 
+
+
+  /**
+   *  @param :  timestamp1,2 as a input params 
+   *     return : true ( if it is less than 1 hr), false(more than 1 hr)
+  **/
+  function get_time_diff(timestamp1, timestamp2, day_change) {
+    var time1 = timestamp1.toString();
+    var time2 = timestamp2.toString();
+    // Split into hours and minutes 
+    var hour1 = parseInt(time1.split(':')[0]);
+    var temp1 = time1.split(':')[1];
+    var minutes1 = parseInt(temp1.split(' ')[0]);  
+    var M1 = temp1.split(' ')[1];
+    var hour2 = parseInt(time2.split(':')[0]);
+    var temp2 = time2.split(':')[1];
+    var minutes2 = parseInt(temp2.split(' ')[0]);  
+    var M2 = temp2.split(' ')[1];
+
+    // Day Change and Validation
+    if (day_change == true && ((M1 == "AM" && M2 == "AM") || (M1 == "PM" && M2 == "PM") || (M1 == "AM" && M2 == "PM"))) {
+      return false;
+    }
+    if ((M2 == "AM" && M1 == "PM") || (M1 == "AM" && M2 == "PM")) {
+      hour2 += 12;
+      (hour2 >= 24) ? hour2 -= 12 : hour2;
+      if (hour1 == 12) {
+        hour1 = 0;
+      }  
+    }
+    if (M1 == "AM" && M2 == "AM" && hour1 == 12) {
       hour1 = 0;
-    }  
+    }else if (M1 == "PM" && M2 == "PM" && hour1 == 12) {
+      hour1 = 0;
+    }
+    if (M2 == "AM" && M1 == "AM" && hour2 == 12) {
+      hour2 = 24;
+    }else if (M2 == "PM" && M1 == "PM" && hour2 == 12) {
+      hour2 = 24;
+    }
+    
+    var timediff = ((60-minutes1) + (minutes2)) + (Math.abs(hour2 - hour1)-1) * 60;
+    if (timediff > 60) {
+      return false;
+    }
+    return true;
   }
-  if (M1 == "AM" && M2 == "AM" && hour1 == 12) {
-    hour1 = 0;
-  }else if (M1 == "PM" && M2 == "PM" && hour1 == 12) {
-    hour1 = 0;
-  }
-  if (M2 == "AM" && M1 == "AM" && hour2 == 12) {
-    hour2 = 24;
-  }else if (M2 == "PM" && M1 == "PM" && hour2 == 12) {
-    hour2 = 24;
-  }
-  
-  var timediff = ((60-minutes1) + (minutes2)) + (Math.abs(hour2 - hour1)-1) * 60;
- 
-  if (timediff > 60) {
-    return false;
-  }
-  return true;
-}
-
-
-

@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>Upload whatsapp activity</title>
+<style>
+	.mainbox {
+		width : 50%;
+		margin : 0 auto;
+	}
+	.textbox {
+		width: 100%;
+    	height: 65%;
+	}
+
+	.submitButton {
+		background-color: lightgreen;
+		width : 20%;
+	}
+</style>
+</head>
+
+<body>
+<h3 style="text-align:center">Copy input from whatsapp console to this page:</h3>
+
+<div class="mainbox">
+	<form action="http://localhost:8090/upload_data" method="POST" 
+	      enctype="multipart/form-data">
+		<input class="textbox" type="text" name="data" />
+		<br />
+		<input class="submitButton" type="submit" value="Generate Graph" />
+	</form>
+</div>
+</body>
+</html>
